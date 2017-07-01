@@ -1,0 +1,38 @@
+version: "2"
+services:
+  db:
+    image: mysql
+    build: ./docker/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: docker-skeleton
+      MYSQL_USER: user
+      MYSQL_PASSWORD: pass
+    volumes:
+      - "./docker/mysql/db:/var/lib/mysql"
+
+  php:
+    build: ./docker/php/
+    environment:
+      TIMEZONE: Asia/Tokyo
+    volumes:
+      - ./docker/php/php.ini:/usr/local/etc/php/php.ini:ro
+      - ./app:/var/www/app
+    working_dir: /var/www/app
+
+  webserver:
+    image: nginx:1.11
+    depends_on:
+      - php
+    volumes_from:
+      - php
+    volumes:
+      - ./docker/nginx/app.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - 8081:80
+
+  composer:
+    image: composer:1.4
+    volumes_from:
+      - php
+    working_dir: /var/www/app
